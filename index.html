@@ -1,1 +1,98 @@
 
+<div style="max-width:520px;margin:0 auto;padding:2rem 1rem;font-family:Georgia,serif">
+
+<p style="text-align:center;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#8B2E0A;margin-bottom:0.5rem">The Berbian Puzzle</p>
+<p style="text-align:center;font-size:12px;font-style:italic;color:#5a4a3a;line-height:1.5;margin-bottom:2rem">Six pieces are hidden across this site. Each one you collect reveals more of the image below.</p>
+
+<div style="border:1px solid #c8bea8;border-radius:4px;padding:1rem;margin-bottom:1.5rem">
+  <div style="display:flex;justify-content:space-between;font-size:11px;color:#5a4a3a;margin-bottom:8px">
+    <span>Pieces collected</span>
+    <span id="pl-count">0 / 6</span>
+  </div>
+  <div style="height:3px;background:#f0ebe3;border-radius:2px;overflow:hidden">
+    <div id="pl-bar" style="height:100%;background:#8B2E0A;border-radius:2px;width:0%"></div>
+  </div>
+</div>
+
+<div style="position:relative;border-radius:4px;overflow:hidden;margin-bottom:1.5rem">
+  <img id="scar-base" src="https://dookarts.org/wp-content/uploads/2026/04/scar-1.jpg" crossorigin="anonymous"
+    style="width:100%;display:block;filter:brightness(0.08)" alt="Scar — The Berbian Chronicles"/>
+  <canvas id="reveal-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
+</div>
+
+<div id="piece-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:1.5rem"></div>
+
+<div id="unlock-wrap" style="display:none;text-align:center;border-top:1px solid #c8bea8;padding-top:1.5rem;margin-top:0.5rem">
+  <p style="font-size:12px;font-style:italic;color:#5a4a3a;margin-bottom:1rem">The image is complete. What lies beyond cannot be unseen.</p>
+  <button id="unlock-btn" style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;padding:8px 24px;border:1px solid #8B2E0A;border-radius:2px;background:transparent;color:#8B2E0A;cursor:pointer">I understand. Show me.</button>
+</div>
+
+<div id="spoiler-wrap" style="display:none;text-align:center;border-top:1px solid #c8bea8;padding-top:1.5rem;margin-top:0.5rem">
+  <p style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B2E0A;margin-bottom:1rem">Spoiler — Book Two: Shadows of Dawn</p>
+  <a href="https://docs.google.com/document/d/1a7z_hg4mYD073wNPKkFp6duX6NpgAuEDaT5FTiqrXi0/edit?usp=sharing"
+    style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;padding:8px 28px;border:1px solid #8B2E0A;border-radius:2px;color:#8B2E0A;text-decoration:none">
+    Read the full excerpt →
+  </a>
+</div>
+
+<div style="margin-top:2rem;text-align:center">
+  <a href="https://dookarts.org" style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#8B2E0A;text-decoration:none;border:1px solid #8B2E0A;padding:6px 20px;border-radius:2px">← Home</a>
+</div>
+
+</div>
+
+<script>
+var IMG='https://dookarts.org/wp-content/uploads/2026/04/scar-1.jpg';
+var KEY='berbia_pieces';
+var PAGES=['Bio','Early Works','Current Projects','Contemporary Art','Contact','Home'];
+var COLS=3,ROWS=2;
+function getC(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}}
+function render(){
+  var col=getC(),n=col.length;
+  document.getElementById('pl-count').textContent=n+' / 6';
+  document.getElementById('pl-bar').style.width=Math.round(n/6*100)+'%';
+  var grid=document.getElementById('piece-grid');
+  grid.innerHTML='';
+  for(var i=0;i<6;i++){
+    var c=i%COLS,r=Math.floor(i/COLS),got=col.includes(i);
+    var cell=document.createElement('div');
+    cell.style.cssText='aspect-ratio:1;border-radius:4px;overflow:hidden;border:1px solid '+(got?'#8B2E0A':'#c8bea8')+';position:relative;background:#f5ede0';
+    if(got){
+      var img=document.createElement('img');
+      img.src=IMG;
+      img.style.cssText='width:100%;height:100%;object-fit:cover;transform:scale(3);transform-origin:'+Math.round(c/2*100)+'% '+Math.round(r/1*100)+'%';
+      cell.appendChild(img);
+    } else {
+      cell.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:4px"><span style="font-size:18px;color:#c8bea8">&#128274;</span><span style="font-size:10px;color:#8B2E0A;text-align:center;padding:0 4px">'+PAGES[i]+'</span></div>';
+    }
+    grid.appendChild(cell);
+  }
+  drawReveal(col);
+  if(n===6)document.getElementById('unlock-wrap').style.display='block';
+}
+function drawReveal(col){
+  var base=document.getElementById('scar-base');
+  var canvas=document.getElementById('reveal-canvas');
+  var img=new Image();
+  img.crossOrigin='anonymous';
+  img.onload=function(){
+    var W=base.offsetWidth||400;
+    var H=Math.round(W*img.naturalHeight/img.naturalWidth);
+    canvas.width=W;canvas.height=H;
+    var ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+    var pw=Math.round(W/COLS),ph=Math.round(H/ROWS);
+    col.forEach(function(id){
+      var c=id%COLS,r=Math.floor(id/COLS);
+      ctx.drawImage(img,Math.round(img.naturalWidth/COLS*c),Math.round(img.naturalHeight/ROWS*r),Math.round(img.naturalWidth/COLS),Math.round(img.naturalHeight/ROWS),c*pw,r*ph,pw,ph);
+    });
+  };
+  img.src=IMG;
+}
+document.getElementById('unlock-btn').addEventListener('click',function(){
+  document.getElementById('unlock-wrap').style.display='none';
+  document.getElementById('spoiler-wrap').style.display='block';
+});
+render();
+window.addEventListener('storage',render);
+</script>
